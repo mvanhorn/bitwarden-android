@@ -226,16 +226,12 @@ class VaultAddEditViewModelTest : BaseViewModelTest() {
         every { show(message = any(), duration = any()) } just runs
     }
     private val environmentRepository = FakeEnvironmentRepository()
-    private val mutableArchiveItemsFlow = MutableStateFlow(true)
     private val mutableCardScannerFlow = MutableStateFlow(false)
-    private val mutableCardScanResultFlow =
-        bufferedMutableSharedFlow<CardScanResult>()
+    private val mutableCardScanResultFlow = bufferedMutableSharedFlow<CardScanResult>()
     private val cardScanManager: CardScanManager = mockk {
         every { cardScanResultFlow } returns mutableCardScanResultFlow
     }
     private val featureFlagManager: FeatureFlagManager = mockk {
-        every { getFeatureFlag(FlagKey.ArchiveItems) } answers { mutableArchiveItemsFlow.value }
-        every { getFeatureFlagFlow(FlagKey.ArchiveItems) } returns mutableArchiveItemsFlow
         every { getFeatureFlag(FlagKey.CardScanner) } answers { mutableCardScannerFlow.value }
         every { getFeatureFlagFlow(FlagKey.CardScanner) } returns mutableCardScannerFlow
     }
@@ -279,7 +275,6 @@ class VaultAddEditViewModelTest : BaseViewModelTest() {
             shouldShowCoachMarkTour = false,
             defaultUriMatchType = UriMatchTypeModel.EXACT,
             hasPremium = true,
-            isArchiveEnabled = true,
             isCardScannerEnabled = false,
         )
         val viewModel = createAddVaultItemViewModel(
@@ -369,7 +364,6 @@ class VaultAddEditViewModelTest : BaseViewModelTest() {
                 shouldShowCoachMarkTour = false,
                 defaultUriMatchType = UriMatchTypeModel.EXACT,
                 hasPremium = true,
-                isArchiveEnabled = true,
                 isCardScannerEnabled = false,
             ),
             viewModel.stateFlow.value,
@@ -5437,7 +5431,6 @@ class VaultAddEditViewModelTest : BaseViewModelTest() {
             createCredentialRequest = createCredentialRequest,
             defaultUriMatchType = UriMatchTypeModel.EXACT,
             hasPremium = hasPremium,
-            isArchiveEnabled = true,
             isCardScannerEnabled = false,
         )
 
