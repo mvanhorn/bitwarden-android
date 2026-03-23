@@ -19,6 +19,7 @@ import com.bitwarden.ui.util.Text
 import com.bitwarden.ui.util.asText
 import com.x8bit.bitwarden.data.auth.datasource.disk.model.OnboardingStatus
 import com.x8bit.bitwarden.data.auth.repository.AuthRepository
+import com.x8bit.bitwarden.data.billing.manager.PremiumStateManager
 import com.x8bit.bitwarden.data.auth.repository.model.PolicyInformation
 import com.x8bit.bitwarden.data.auth.repository.model.UserState
 import com.x8bit.bitwarden.data.platform.manager.FeatureFlagManager
@@ -109,6 +110,10 @@ class AddEditSendViewModelTest : BaseViewModelTest() {
         every { sendSnackbarData(data = any(), relay = any()) } just runs
     }
 
+    private val mutableIsInAppUpgradeAvailableFlow = MutableStateFlow(false)
+    private val premiumStateManager: PremiumStateManager = mockk {
+        every { isInAppUpgradeAvailableFlow } returns mutableIsInAppUpgradeAvailableFlow
+    }
     private val mutableSendEmailVerificationFeatureFlagFlow = MutableStateFlow(false)
     private val featureFlagManager: FeatureFlagManager = mockk {
         every {
@@ -1458,20 +1463,34 @@ class AddEditSendViewModelTest : BaseViewModelTest() {
 
     @Suppress("MaxLineLength")
     @Test
-    fun `UpgradeToPremiumClick should send NavigateToPremium event`() = runTest {
-        val viewModel = createViewModel()
-
-        viewModel.eventFlow.test {
-            viewModel.trySendAction(AddEditSendAction.UpgradeToPremiumClick)
-            val event = awaitItem()
-            assertEquals(
-                AddEditSendEvent.NavigateToPremium(
-                    uri = "https://vault.bitwarden.com/#/settings/subscription/premium?callToAction=upgradeToPremium",
-                ),
-                event,
-            )
+    fun `UpgradeToPremiumClick should send NavigateToPremium when in-app upgrade not available`() =
+        runTest {
+            mutableIsInAppUpgradeAvailableFlow.value = false
+            val viewModel = createViewModel()
+            viewModel.eventFlow.test {
+                viewModel.trySendAction(AddEditSendAction.UpgradeToPremiumClick)
+                assertEquals(
+                    AddEditSendEvent.NavigateToPremium(
+                        uri = "https://vault.bitwarden.com/#/settings/subscription/premium?callToAction=upgradeToPremium",
+                    ),
+                    awaitItem(),
+                )
+            }
         }
-    }
+
+    @Test
+    fun `UpgradeToPremiumClick should send NavigateToPlanModal when in-app upgrade available`() =
+        runTest {
+            mutableIsInAppUpgradeAvailableFlow.value = true
+            val viewModel = createViewModel()
+            viewModel.eventFlow.test {
+                viewModel.trySendAction(AddEditSendAction.UpgradeToPremiumClick)
+                assertEquals(
+                    AddEditSendEvent.NavigateToPlanModal,
+                    awaitItem(),
+                )
+            }
+        }
 
     //endregion Authentication Tests
 
@@ -1499,6 +1518,7 @@ class AddEditSendViewModelTest : BaseViewModelTest() {
         snackbarRelayManager = snackbarRelayManager,
         generatorRepository = generatorRepository,
         featureFlagManager = featureFlagManager,
+        premiumStateManager = premiumStateManager,
     )
 }
 

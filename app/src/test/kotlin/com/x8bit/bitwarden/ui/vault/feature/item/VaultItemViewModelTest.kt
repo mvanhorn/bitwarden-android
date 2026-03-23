@@ -26,6 +26,7 @@ import com.bitwarden.vault.CipherView
 import com.bitwarden.vault.FolderView
 import com.x8bit.bitwarden.data.auth.datasource.disk.model.OnboardingStatus
 import com.x8bit.bitwarden.data.auth.repository.AuthRepository
+import com.x8bit.bitwarden.data.billing.manager.PremiumStateManager
 import com.x8bit.bitwarden.data.auth.repository.model.BreachCountResult
 import com.x8bit.bitwarden.data.auth.repository.model.UserState
 import com.x8bit.bitwarden.data.auth.repository.model.createMockOrganization
@@ -132,6 +133,10 @@ class VaultItemViewModelTest : BaseViewModelTest() {
         } returns mutableSnackbarDataFlow
         every { sendSnackbarData(data = any(), relay = any()) } just runs
     }
+    private val mutableIsInAppUpgradeAvailableFlow = MutableStateFlow(false)
+    private val premiumStateManager: PremiumStateManager = mockk {
+        every { isInAppUpgradeAvailableFlow } returns mutableIsInAppUpgradeAvailableFlow
+    }
     private val mutableArchiveItemsFlow = MutableStateFlow(true)
     private val featureFlagManager: FeatureFlagManager = mockk {
         every { getFeatureFlag(FlagKey.ArchiveItems) } answers { mutableArchiveItemsFlow.value }
@@ -232,20 +237,41 @@ class VaultItemViewModelTest : BaseViewModelTest() {
         }
 
         @Test
-        fun `UpgradeToPremiumClick should emit NavigateToPremium`() = runTest {
-            val viewModel = createViewModel(state = null)
-            viewModel.eventFlow.test {
-                viewModel.trySendAction(VaultItemAction.Common.UpgradeToPremiumClick)
-                assertEquals(
-                    VaultItemEvent.NavigateToUri(
-                        uri = "https://vault.bitwarden.com/#/" +
-                            "settings/subscription/premium" +
-                            "?callToAction=upgradeToPremium",
-                    ),
-                    awaitItem(),
-                )
+        fun `UpgradeToPremiumClick should emit NavigateToUri when in-app upgrade not available`() =
+            runTest {
+                mutableIsInAppUpgradeAvailableFlow.value = false
+                val viewModel = createViewModel(state = null)
+                viewModel.eventFlow.test {
+                    viewModel.trySendAction(
+                        VaultItemAction.Common.UpgradeToPremiumClick,
+                    )
+                    assertEquals(
+                        VaultItemEvent.NavigateToUri(
+                            uri = "https://vault.bitwarden.com/#/" +
+                                "settings/subscription/premium" +
+                                "?callToAction=upgradeToPremium",
+                        ),
+                        awaitItem(),
+                    )
+                }
             }
-        }
+
+        @Suppress("MaxLineLength")
+        @Test
+        fun `UpgradeToPremiumClick should emit NavigateToPlanModal when in-app upgrade available`() =
+            runTest {
+                mutableIsInAppUpgradeAvailableFlow.value = true
+                val viewModel = createViewModel(state = null)
+                viewModel.eventFlow.test {
+                    viewModel.trySendAction(
+                        VaultItemAction.Common.UpgradeToPremiumClick,
+                    )
+                    assertEquals(
+                        VaultItemEvent.NavigateToPlanModal,
+                        awaitItem(),
+                    )
+                }
+            }
 
         @Test
         fun `ArchiveClick without Premium should show ArchiveRequiresPremium dialog`() = runTest {
@@ -2963,6 +2989,7 @@ class VaultItemViewModelTest : BaseViewModelTest() {
         environmentRepository = environmentRepository,
         settingsRepository = settingsRepository,
         snackbarRelayManager = snackbarRelayManager,
+        premiumStateManager = premiumStateManager,
         featureFlagManager = featureFlagManager,
     )
 

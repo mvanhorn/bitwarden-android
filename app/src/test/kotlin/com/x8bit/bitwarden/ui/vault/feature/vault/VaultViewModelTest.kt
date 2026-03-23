@@ -236,10 +236,14 @@ class VaultViewModelTest : BaseViewModelTest() {
     }
 
     private val mutablePremiumUpgradeBannerEligibleFlow = MutableStateFlow(false)
+    private val mutableIsInAppUpgradeAvailableFlow = MutableStateFlow(false)
     private val premiumStateManager: PremiumStateManager = mockk {
         every {
             isPremiumUpgradeBannerEligibleFlow
         } returns mutablePremiumUpgradeBannerEligibleFlow
+        every {
+            isInAppUpgradeAvailableFlow
+        } returns mutableIsInAppUpgradeAvailableFlow
         every { dismissPremiumUpgradeBanner() } just runs
     }
 
@@ -832,20 +836,37 @@ class VaultViewModelTest : BaseViewModelTest() {
     }
 
     @Test
-    fun `UpgradeToPremiumClick should emit NavigateToUrl`() = runTest {
-        val viewModel = createViewModel()
-        viewModel.eventFlow.test {
-            viewModel.trySendAction(VaultAction.UpgradeToPremiumClick)
-            assertEquals(
-                VaultEvent.NavigateToUrl(
-                    url = "https://vault.bitwarden.com/#/" +
-                        "settings/subscription/premium" +
-                        "?callToAction=upgradeToPremium",
-                ),
-                awaitItem(),
-            )
+    fun `UpgradeToPremiumClick should emit NavigateToUrl when in-app upgrade not available`() =
+        runTest {
+            mutableIsInAppUpgradeAvailableFlow.value = false
+            val viewModel = createViewModel()
+            viewModel.eventFlow.test {
+                viewModel.trySendAction(VaultAction.UpgradeToPremiumClick)
+                assertEquals(
+                    VaultEvent.NavigateToUrl(
+                        url = "https://vault.bitwarden.com/#/" +
+                            "settings/subscription/premium" +
+                            "?callToAction=upgradeToPremium",
+                    ),
+                    awaitItem(),
+                )
+            }
         }
-    }
+
+    @Suppress("MaxLineLength")
+    @Test
+    fun `UpgradeToPremiumClick should emit NavigateToUpgradePremium when in-app upgrade available`() =
+        runTest {
+            mutableIsInAppUpgradeAvailableFlow.value = true
+            val viewModel = createViewModel()
+            viewModel.eventFlow.test {
+                viewModel.trySendAction(VaultAction.UpgradeToPremiumClick)
+                assertEquals(
+                    VaultEvent.NavigateToUpgradePremium,
+                    awaitItem(),
+                )
+            }
+        }
 
     @Test
     fun `ArchiveClick without Premium should show ArchiveRequiresPremium dialog`() = runTest {
