@@ -1,6 +1,8 @@
 package com.x8bit.bitwarden.data.auth.datasource.sdk
 
 import com.bitwarden.auth.KeyConnectorRegistrationResult
+import com.bitwarden.auth.TdeRegistrationRequest
+import com.bitwarden.auth.TdeRegistrationResponse
 import com.bitwarden.core.AuthRequestResponse
 import com.bitwarden.core.FingerprintRequest
 import com.bitwarden.core.KeyConnectorResponse
@@ -37,6 +39,27 @@ class AuthSdkSourceImpl(
                 ssoOrgIdentifier = ssoOrganizationIdentifier,
             )
         }
+    }
+
+    override suspend fun postKeysForTdeRegistration(
+        userId: String,
+        organizationId: String,
+        organizationPublicKey: String,
+        deviceIdentifier: String,
+        shouldTrustDevice: Boolean,
+    ): Result<TdeRegistrationResponse> = runCatchingWithLogs {
+        getClient(userId = userId)
+            .auth()
+            .registration()
+            .postKeysForTdeRegistration(
+                request = TdeRegistrationRequest(
+                    orgId = organizationId,
+                    orgPublicKey = organizationPublicKey,
+                    userId = userId,
+                    deviceIdentifier = deviceIdentifier,
+                    trustDevice = shouldTrustDevice,
+                ),
+            )
     }
 
     override suspend fun getNewAuthRequest(

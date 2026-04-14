@@ -1,6 +1,8 @@
 package com.x8bit.bitwarden.data.auth.datasource.sdk
 
 import com.bitwarden.auth.KeyConnectorRegistrationResult
+import com.bitwarden.auth.TdeRegistrationRequest
+import com.bitwarden.auth.TdeRegistrationResponse
 import com.bitwarden.core.AuthRequestResponse
 import com.bitwarden.core.FingerprintRequest
 import com.bitwarden.core.KeyConnectorResponse
@@ -86,6 +88,52 @@ class AuthSdkSourceTest {
                 clientRegistration.postKeysForKeyConnectorRegistration(
                     keyConnectorUrl = keyConnectorUrl,
                     ssoOrgIdentifier = ssoOrgIdentifier,
+                )
+            }
+        }
+
+    @Test
+    fun `postKeysForTdeRegistration should call SDK and return a Result with correct data`() =
+        runBlocking {
+            val userId = "userId"
+            val organizationId = "organizationId"
+            val organizationPublicKey = "organizationPublicKey"
+            val deviceIdentifier = "deviceIdentifier"
+            val shouldTrustDevice = false
+            val expectedResult = mockk<TdeRegistrationResponse>()
+            coEvery {
+                clientRegistration.postKeysForTdeRegistration(
+                    request = TdeRegistrationRequest(
+                        orgId = organizationId,
+                        orgPublicKey = organizationPublicKey,
+                        userId = userId,
+                        deviceIdentifier = deviceIdentifier,
+                        trustDevice = shouldTrustDevice,
+                    ),
+                )
+            } returns expectedResult
+
+            val result = authSkdSource.postKeysForTdeRegistration(
+                organizationId = organizationId,
+                organizationPublicKey = organizationPublicKey,
+                userId = userId,
+                deviceIdentifier = deviceIdentifier,
+                shouldTrustDevice = shouldTrustDevice,
+            )
+
+            assertEquals(
+                expectedResult.asSuccess(),
+                result,
+            )
+            coVerify(exactly = 1) {
+                clientRegistration.postKeysForTdeRegistration(
+                    request = TdeRegistrationRequest(
+                        orgId = organizationId,
+                        orgPublicKey = organizationPublicKey,
+                        userId = userId,
+                        deviceIdentifier = deviceIdentifier,
+                        trustDevice = shouldTrustDevice,
+                    ),
                 )
             }
         }
