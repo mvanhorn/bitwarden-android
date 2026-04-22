@@ -145,7 +145,6 @@ class UserLogoutManagerTest {
         val pinProtectedUserKeyEnvelope = "pinProtectedUserKeyEnvelope"
         val encryptedPin = "encryptedPin"
 
-        every { authDiskSource.userState } returns MULTI_USER_STATE
         every {
             settingsDiskSource.getVaultTimeoutInMinutes(userId = userId)
         } returns vaultTimeoutInMinutes
@@ -186,7 +185,6 @@ class UserLogoutManagerTest {
                 userId = userId,
                 vaultTimeoutAction = vaultTimeoutAction,
             )
-            toastManager.show(messageId = BitwardenString.account_switched_automatically)
             settingsDiskSource.storeVaultTimeoutInMinutes(
                 userId = userId,
                 vaultTimeoutInMinutes = vaultTimeoutInMinutes,
@@ -216,7 +214,6 @@ class UserLogoutManagerTest {
         val pinProtectedUserKeyEnvelope = "pinProtectedUserKeyEnvelope"
         val encryptedPin = "encryptedPin"
 
-        every { authDiskSource.userState } returns MULTI_USER_STATE
         every {
             settingsDiskSource.getVaultTimeoutInMinutes(userId = userId)
         } returns vaultTimeoutInMinutes
@@ -247,11 +244,6 @@ class UserLogoutManagerTest {
         userLogoutManager.softLogout(userId = userId, reason = LogoutReason.Timeout)
 
         verify(exactly = 1) {
-            authDiskSource.userState = UserStateJson(
-                activeUserId = USER_ID_2,
-                accounts = MULTI_USER_STATE.accounts,
-            )
-            toastManager.show(messageId = BitwardenString.account_switched_automatically)
             settingsDiskSource.storeVaultTimeoutInMinutes(
                 userId = userId,
                 vaultTimeoutInMinutes = vaultTimeoutInMinutes,
