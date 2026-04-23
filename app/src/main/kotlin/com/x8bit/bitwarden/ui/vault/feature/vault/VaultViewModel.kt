@@ -400,7 +400,7 @@ class VaultViewModel @Inject constructor(
 
     private fun handleUpgradeToPremiumClick() {
         mutableStateFlow.update { it.copy(dialog = null) }
-        if (premiumStateManager.isInAppUpgradeAvailableFlow.value) {
+        if (premiumStateManager.isInAppUpgradeAvailable()) {
             sendEvent(VaultEvent.NavigateToUpgradePremium)
         } else {
             val baseUrl = environmentRepository

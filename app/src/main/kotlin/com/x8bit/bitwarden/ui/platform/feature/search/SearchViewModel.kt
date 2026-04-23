@@ -320,7 +320,7 @@ class SearchViewModel @Inject constructor(
 
     private fun handleUpgradeToPremiumClick() {
         mutableStateFlow.update { it.copy(dialogState = null) }
-        if (premiumStateManager.isInAppUpgradeAvailableFlow.value) {
+        if (premiumStateManager.isInAppUpgradeAvailable()) {
             sendEvent(SearchEvent.NavigateToPlanModal)
         } else {
             val baseUrl = environmentRepo

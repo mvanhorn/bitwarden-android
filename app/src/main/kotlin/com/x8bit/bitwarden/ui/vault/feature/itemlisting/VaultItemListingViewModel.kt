@@ -673,7 +673,7 @@ class VaultItemListingViewModel @Inject constructor(
 
     private fun handleUpgradeToPremiumClick() {
         clearDialogState()
-        if (premiumStateManager.isInAppUpgradeAvailableFlow.value) {
+        if (premiumStateManager.isInAppUpgradeAvailable()) {
             sendEvent(VaultItemListingEvent.NavigateToPlanModal)
         } else {
             val baseUrl = environmentRepository

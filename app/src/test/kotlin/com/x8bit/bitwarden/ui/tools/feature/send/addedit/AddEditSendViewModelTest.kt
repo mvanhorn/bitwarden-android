@@ -110,9 +110,8 @@ class AddEditSendViewModelTest : BaseViewModelTest() {
         every { sendSnackbarData(data = any(), relay = any()) } just runs
     }
 
-    private val mutableIsInAppUpgradeAvailableFlow = MutableStateFlow(false)
     private val premiumStateManager: PremiumStateManager = mockk {
-        every { isInAppUpgradeAvailableFlow } returns mutableIsInAppUpgradeAvailableFlow
+        every { isInAppUpgradeAvailable() } returns false
     }
     private val mutableSendEmailVerificationFeatureFlagFlow = MutableStateFlow(false)
     private val featureFlagManager: FeatureFlagManager = mockk {
@@ -1465,7 +1464,6 @@ class AddEditSendViewModelTest : BaseViewModelTest() {
     @Test
     fun `UpgradeToPremiumClick should send NavigateToPremium when in-app upgrade not available`() =
         runTest {
-            mutableIsInAppUpgradeAvailableFlow.value = false
             val viewModel = createViewModel()
             viewModel.eventFlow.test {
                 viewModel.trySendAction(AddEditSendAction.UpgradeToPremiumClick)
@@ -1481,7 +1479,7 @@ class AddEditSendViewModelTest : BaseViewModelTest() {
     @Test
     fun `UpgradeToPremiumClick should send NavigateToPlanModal when in-app upgrade available`() =
         runTest {
-            mutableIsInAppUpgradeAvailableFlow.value = true
+            every { premiumStateManager.isInAppUpgradeAvailable() } returns true
             val viewModel = createViewModel()
             viewModel.eventFlow.test {
                 viewModel.trySendAction(AddEditSendAction.UpgradeToPremiumClick)

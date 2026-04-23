@@ -650,7 +650,7 @@ class AddEditSendViewModel @Inject constructor(
     }
 
     private fun handleUpgradeToPremiumClick() {
-        if (premiumStateManager.isInAppUpgradeAvailableFlow.value) {
+        if (premiumStateManager.isInAppUpgradeAvailable()) {
             sendEvent(AddEditSendEvent.NavigateToPlanModal)
         } else {
             val baseUrl = environmentRepo

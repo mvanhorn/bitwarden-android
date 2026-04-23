@@ -163,9 +163,8 @@ class SearchViewModelTest : BaseViewModelTest() {
             getSnackbarDataFlow(relay = any(), relays = anyVararg())
         } returns mutableSnackbarDataFlow
     }
-    private val mutableIsInAppUpgradeAvailableFlow = MutableStateFlow(false)
     private val premiumStateManager: PremiumStateManager = mockk {
-        every { isInAppUpgradeAvailableFlow } returns mutableIsInAppUpgradeAvailableFlow
+        every { isInAppUpgradeAvailable() } returns false
     }
     private val mutableArchiveItemsFlow = MutableStateFlow(true)
     private val featureFlagManager: FeatureFlagManager = mockk {
@@ -308,7 +307,6 @@ class SearchViewModelTest : BaseViewModelTest() {
     @Test
     fun `UpgradeToPremiumClick should emit NavigateToUrl when in-app upgrade not available`() =
         runTest {
-            mutableIsInAppUpgradeAvailableFlow.value = false
             val viewModel = createViewModel(initialState = null)
             viewModel.eventFlow.test {
                 viewModel.trySendAction(SearchAction.UpgradeToPremiumClick)
@@ -326,7 +324,7 @@ class SearchViewModelTest : BaseViewModelTest() {
     @Test
     fun `UpgradeToPremiumClick should emit NavigateToPlanModal when in-app upgrade available`() =
         runTest {
-            mutableIsInAppUpgradeAvailableFlow.value = true
+            every { premiumStateManager.isInAppUpgradeAvailable() } returns true
             val viewModel = createViewModel(initialState = null)
             viewModel.eventFlow.test {
                 viewModel.trySendAction(SearchAction.UpgradeToPremiumClick)

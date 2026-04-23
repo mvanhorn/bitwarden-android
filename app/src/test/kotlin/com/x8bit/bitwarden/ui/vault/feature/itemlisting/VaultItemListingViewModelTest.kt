@@ -299,9 +299,8 @@ class VaultItemListingViewModelTest : BaseViewModelTest() {
         every { parse(any<GetPublicKeyCredentialOption>()) } returns DEFAULT_RELYING_PARTY_ID
         every { parse(any<CreatePublicKeyCredentialRequest>()) } returns DEFAULT_RELYING_PARTY_ID
     }
-    private val mutableIsInAppUpgradeAvailableFlow = MutableStateFlow(false)
     private val premiumStateManager: PremiumStateManager = mockk {
-        every { isInAppUpgradeAvailableFlow } returns mutableIsInAppUpgradeAvailableFlow
+        every { isInAppUpgradeAvailable() } returns false
     }
     private val mutableArchiveItemsFlow = MutableStateFlow(true)
     private val featureFlagManager: FeatureFlagManager = mockk {
@@ -1064,7 +1063,6 @@ class VaultItemListingViewModelTest : BaseViewModelTest() {
     @Test
     fun `UpgradeToPremiumClick should emit NavigateToUrl when in-app upgrade not available`() =
         runTest {
-            mutableIsInAppUpgradeAvailableFlow.value = false
             val viewModel = createVaultItemListingViewModel()
             viewModel.eventFlow.test {
                 viewModel.trySendAction(VaultItemListingsAction.UpgradeToPremiumClick)
@@ -1082,7 +1080,7 @@ class VaultItemListingViewModelTest : BaseViewModelTest() {
     @Test
     fun `UpgradeToPremiumClick should emit NavigateToPlanModal when in-app upgrade available`() =
         runTest {
-            mutableIsInAppUpgradeAvailableFlow.value = true
+            every { premiumStateManager.isInAppUpgradeAvailable() } returns true
             val viewModel = createVaultItemListingViewModel()
             viewModel.eventFlow.test {
                 viewModel.trySendAction(VaultItemListingsAction.UpgradeToPremiumClick)

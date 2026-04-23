@@ -236,14 +236,11 @@ class VaultViewModelTest : BaseViewModelTest() {
     }
 
     private val mutablePremiumUpgradeBannerEligibleFlow = MutableStateFlow(false)
-    private val mutableIsInAppUpgradeAvailableFlow = MutableStateFlow(false)
     private val premiumStateManager: PremiumStateManager = mockk {
         every {
             isPremiumUpgradeBannerEligibleFlow
         } returns mutablePremiumUpgradeBannerEligibleFlow
-        every {
-            isInAppUpgradeAvailableFlow
-        } returns mutableIsInAppUpgradeAvailableFlow
+        every { isInAppUpgradeAvailable() } returns false
         every { dismissPremiumUpgradeBanner() } just runs
     }
 
@@ -838,7 +835,6 @@ class VaultViewModelTest : BaseViewModelTest() {
     @Test
     fun `UpgradeToPremiumClick should emit NavigateToUrl when in-app upgrade not available`() =
         runTest {
-            mutableIsInAppUpgradeAvailableFlow.value = false
             val viewModel = createViewModel()
             viewModel.eventFlow.test {
                 viewModel.trySendAction(VaultAction.UpgradeToPremiumClick)
@@ -857,7 +853,7 @@ class VaultViewModelTest : BaseViewModelTest() {
     @Test
     fun `UpgradeToPremiumClick should emit NavigateToUpgradePremium when in-app upgrade available`() =
         runTest {
-            mutableIsInAppUpgradeAvailableFlow.value = true
+            every { premiumStateManager.isInAppUpgradeAvailable() } returns true
             val viewModel = createViewModel()
             viewModel.eventFlow.test {
                 viewModel.trySendAction(VaultAction.UpgradeToPremiumClick)
